@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 禁パチ積立
 
-## Getting Started
+パチンコに行かない習慣を可視化し、行ってしまった時の後悔を未来の自分に残すための個人専用アプリ。Next.js (App Router) + Supabase。
 
-First, run the development server:
+## セットアップ
+
+### 1. Supabaseプロジェクトを作成する
+
+1. [supabase.com](https://supabase.com) で新規プロジェクトを作成する
+2. SQL Editorで `supabase/schema.sql` の内容を実行する(テーブル+RLSポリシーが作成される)
+3. Authentication > Users で自分用のユーザーを1人作成する(メール/パスワード。サインアップ画面は用意していないので、ここで直接作成する)
+4. Project Settings > API から `Project URL` と `anon public` キーを取得する
+
+### 2. 環境変数を設定する
+
+`.env.local.example` を `.env.local` にコピーし、取得した値を入力する。
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.local.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. ローカルで起動する
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+[http://localhost:3000](http://localhost:3000) を開き、手順1で作成したアカウントでログインする。
 
-## Learn More
+### 4. デプロイ(Vercel)
 
-To learn more about Next.js, take a look at the following resources:
+Vercelにプロジェクトを import し、`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` を環境変数に設定してデプロイする。デプロイ後、スマホのブラウザでアクセスし「ホーム画面に追加」するとPWAとしてインストールできる。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 機能
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- 今日の記録(行かなかった / 行きたくなったが耐えた / 行ってしまった)を数秒で入力
+- 積立額の自動計算(週あたり額または1日あたり額で設定)
+- 後悔メモ(使用金額・負け金額・理由・気持ち・次回どうするか・自由記述)
+- カレンダー表示(○ / ◎ / ×)とタップでの詳細確認
+- 統計(累計積立額・累計成功日数・最長連続記録・月別成功率・理由ランキング)
+- PWA対応(ホーム画面追加、簡易オフラインキャッシュ)
 
-## Deploy on Vercel
+## ディレクトリ構成
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `app/login` — ログイン画面
+- `app/(app)` — ログイン後の画面(ホーム/カレンダー/統計/設定/後悔メモ入力)、下部タブナビ付き
+- `lib/supabase` — Supabaseクライアント(ブラウザ/サーバー/Proxy用)
+- `lib/data.ts` — Supabaseへのデータアクセス関数
+- `lib/streak.ts`, `lib/stats.ts`, `lib/savings.ts`, `lib/calendar.ts`, `lib/date.ts` — 集計・日付計算ロジック
+- `supabase/schema.sql` — DBスキーマ(テーブル + RLSポリシー)
+- `proxy.ts` — 認証チェック(未ログイン時は`/login`へリダイレクト)
+# restraint
