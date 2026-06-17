@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getAllRecords, getSettings, getSavingsGoals, markGoalAchieved } from "@/lib/data";
+import { getAllRecords, getSettings, getSavingsGoals } from "@/lib/data";
 import { getConfiguredDailyAmount } from "@/lib/savings";
 import { currentStreak } from "@/lib/streak";
 import { currentMonthJST, formatJapaneseDate, todayJST } from "@/lib/date";
@@ -27,23 +27,15 @@ export default async function HomePage() {
 
   const totalSaved = records.reduce((sum, r) => sum + r.daily_amount, 0);
 
-  // 達成条件を満たした目標を自動マーク（初回のみ achieved_at をセット）
+  // 達成判定はクライアント側で計算（DB書き込みはrecordToday時のみ）
   const newlyAchievedIds: string[] = [];
-  await Promise.all(
-    goals
-      .filter((g) => !g.achieved_at && totalSaved >= g.target_amount)
-      .map(async (g) => {
-        try {
-          await markGoalAchieved(supabase, user.id, g.id);
-          newlyAchievedIds.push(g.id);
-        } catch {
-          // テーブル未作成などのエラーは無視
-        }
-      }),
-  );
-  const updatedGoals = goals.map((g) =>
-    newlyAchievedIds.includes(g.id) ? { ...g, achieved_at: new Date().toISOString() } : g,
-  );
+  const updatedGoals = goals.map((g) => {
+    if (!g.achieved_at && totalSaved >= g.target_amount) {
+      newlyAchievedIds.push(g.id);
+      return { ...g, achieved_at: new Date().toISOString() };
+    }
+    return g;
+  });
 
   const streak = currentStreak(records, today);
   const monthRecords = records.filter((r) => r.date.startsWith(month));

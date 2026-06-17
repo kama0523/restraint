@@ -14,7 +14,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-stone-200 bg-white pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(28,25,23,0.08)]">
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-stone-200 bg-white pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(28,25,23,0.08)]">
       <ul className="flex">
         {TABS.map((tab) => {
           const isActive = pathname === tab.href;
