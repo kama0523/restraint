@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { upsertSavingsSettings } from "@/lib/data";
+import { upsertSavingsSettings, upsertExtendedSettings } from "@/lib/data";
 import { dailyAmountFromWeekly, weeklyAmountFromDaily } from "@/lib/savings";
 import type { SavingsBasis } from "@/lib/types";
 
@@ -39,6 +39,33 @@ export async function updateSettings(formData: FormData) {
   });
   revalidatePath("/settings");
   revalidatePath("/");
+  redirect("/settings?saved=1");
+}
+
+export async function updateExtendedSettings(formData: FormData) {
+  const addictionLabel = (formData.get("addiction_label") as string)?.trim() || null;
+  const pledge = (formData.get("pledge") as string)?.trim() || null;
+  const alternativeActions = (formData.get("alternative_actions") as string)?.trim() || null;
+  const timerRaw = Number(formData.get("urge_timer_minutes"));
+  const urgeTimerMinutes = Number.isFinite(timerRaw)
+    ? Math.max(5, Math.min(60, timerRaw))
+    : 20;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  await upsertExtendedSettings(supabase, user.id, {
+    addictionLabel,
+    pledge,
+    alternativeActions,
+    urgeTimerMinutes,
+  });
+  revalidatePath("/settings");
+  revalidatePath("/");
+  revalidatePath("/urge");
   redirect("/settings?saved=1");
 }
 

@@ -35,6 +35,10 @@ export async function getSettings(supabase: SupabaseClient, userId: string): Pro
     daily_amount: null,
     savings_basis: "weekly",
     updated_at: new Date().toISOString(),
+    addiction_label: null,
+    pledge: null,
+    alternative_actions: null,
+    urge_timer_minutes: 20,
   };
 }
 
@@ -57,6 +61,27 @@ export async function upsertSavingsSettings(
       updated_at: new Date().toISOString(),
     });
 
+  if (error) throw error;
+}
+
+export async function upsertExtendedSettings(
+  supabase: SupabaseClient,
+  userId: string,
+  input: {
+    addictionLabel: string | null;
+    pledge: string | null;
+    alternativeActions: string | null;
+    urgeTimerMinutes: number;
+  },
+): Promise<void> {
+  const { error } = await supabase.from("settings").upsert({
+    user_id: userId,
+    addiction_label: input.addictionLabel,
+    pledge: input.pledge,
+    alternative_actions: input.alternativeActions,
+    urge_timer_minutes: input.urgeTimerMinutes,
+    updated_at: new Date().toISOString(),
+  });
   if (error) throw error;
 }
 

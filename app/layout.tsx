@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "禁パチ積立",
-  description: "行かなかった日を積み立てる、自分専用の禁パチ習慣アプリ",
+  title: "抑制積立",
+  description: "やめたい習慣を我慢した日を積み立てる、自分専用の抑制習慣アプリ",
   manifest: "/manifest.json",
   icons: {
     icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "禁パチ積立",
+    title: "抑制積立",
   },
 };
 

@@ -99,7 +99,7 @@ export function CalendarGrid({
               {selectedNote && (
                 <div className="flex flex-col gap-1 text-sm text-stone-600">
                   <p>
-                    使用金額 ¥{selectedNote.amount_spent.toLocaleString()} / 負け金額 ¥
+                    使用金額 ¥{selectedNote.amount_spent.toLocaleString()} / 損失金額 ¥
                     {selectedNote.amount_lost.toLocaleString()}
                   </p>
                   <p>

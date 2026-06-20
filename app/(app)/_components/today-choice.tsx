@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { recordToday, recordWent, updateTodayMemo } from "../actions";
+import { recordToday, updateTodayMemo } from "../actions";
 import type { DailyRecord } from "@/lib/types";
 import { STATUS_BADGE_CLASS, STATUS_LABEL } from "@/lib/status";
 
@@ -26,17 +26,15 @@ export function TodayChoice({
           onClick={() => startTransition(() => recordToday("avoided"))}
           className="rounded-xl bg-emerald-600 py-4 text-base font-semibold text-white shadow-sm active:bg-emerald-700 disabled:opacity-50"
         >
-          ○ 行かなかった
+          ○ 今日は踏みとどまった
           <span className="ml-2 text-sm font-normal text-emerald-100">+¥{dailyAmount}</span>
         </button>
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => startTransition(() => recordWent())}
-          className="rounded-xl border border-stone-300 py-4 text-base font-semibold text-stone-500 active:bg-stone-100 disabled:opacity-50"
+        <Link
+          href="/slip-confirm"
+          className="block rounded-xl border border-stone-300 py-4 text-center text-base font-semibold text-stone-500 active:bg-stone-100"
         >
-          × 行ってしまった
-        </button>
+          × やってしまいそう
+        </Link>
       </div>
     );
   }
@@ -59,7 +57,7 @@ export function TodayChoice({
               setMemoDirty(true);
             }}
             rows={2}
-            placeholder="何があった?どう耐えた?"
+            placeholder="何があった？どう乗り越えた？"
             className="w-full rounded-lg border border-stone-200 p-2 text-sm focus:border-sky-400 focus:outline-none"
           />
           {memoDirty && (

@@ -1,5 +1,7 @@
--- 禁パチ積立アプリ DBスキーマ
+-- 抑制積立アプリ DBスキーマ
 -- Supabase SQL Editorで実行してください。
+-- 初回: このファイルを全て実行
+-- 追加機能: supabase/migrations/002_extended_settings.sql を実行してください
 
 -- 積立設定(ユーザーごと1行)
 create table if not exists settings (

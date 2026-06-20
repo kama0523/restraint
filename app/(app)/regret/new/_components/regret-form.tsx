@@ -22,12 +22,12 @@ export function RegretForm({
         <Field label="使用金額">
           <MoneyInput name="amount_spent" defaultValue={initial?.amount_spent} />
         </Field>
-        <Field label="負け金額">
+        <Field label="損失金額">
           <MoneyInput name="amount_lost" defaultValue={initial?.amount_lost} />
         </Field>
       </div>
 
-      <Field label="行った理由">
+      <Field label="やってしまった理由">
         <select
           name="reason"
           required
@@ -57,22 +57,22 @@ export function RegretForm({
         </Field>
       )}
 
-      <Field label="帰宅時の気持ち">
+      <Field label="やった後の気持ち">
         <textarea
           name="feeling"
           defaultValue={initial?.feeling ?? ""}
           rows={3}
-          placeholder="帰り道、どんな気持ちだった?"
+          placeholder="やった後、どんな気持ちだった？後悔？解放感？"
           className="w-full rounded-lg border border-stone-300 p-3 text-base focus:border-emerald-500 focus:outline-none"
         />
       </Field>
 
-      <Field label="次回同じ状況になったらどうするか">
+      <Field label="次回同じ衝動が来たらどうするか">
         <textarea
           name="next_action"
           defaultValue={initial?.next_action ?? ""}
           rows={3}
-          placeholder="次に行きたくなったら、どうする?"
+          placeholder="次にやりたくなったら、どうする？衝動ブレーキを使う？誰かに連絡する？"
           className="w-full rounded-lg border border-stone-300 p-3 text-base focus:border-emerald-500 focus:outline-none"
         />
       </Field>
