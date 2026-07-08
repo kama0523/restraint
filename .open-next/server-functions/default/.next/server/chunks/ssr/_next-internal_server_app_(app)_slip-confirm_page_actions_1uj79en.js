@@ -1,3 +1,0 @@
-module.exports=[35662,a=>{"use strict";var b=a.i(37936);a.i(70396);var c=a.i(73727),d=a.i(18558),e=a.i(98310),f=a.i(82193),g=a.i(25387);async function h(){let a=await (0,e.createClient)(),{data:b}=await a.auth.getUser();b.user||(0,c.redirect)("/login");let h=await (0,f.saveDailyRecord)(a,b.user.id,(0,g.todayJST)(),"went");(0,d.revalidatePath)("/"),(0,c.redirect)(`/regret/new?recordId=${h.id}`)}(0,a.i(13095).ensureServerEntryExports)([h]),(0,b.registerServerReference)(h,"00d614cd9732777f592431f570f1d5d1a200d18a3b",null),a.s([],57257),a.i(57257),a.s(["00d614cd9732777f592431f570f1d5d1a200d18a3b",0,h],35662)}];
-
-//# sourceMappingURL=_next-internal_server_app_%28app%29_slip-confirm_page_actions_1uj79en.js.map
