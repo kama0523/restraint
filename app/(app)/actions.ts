@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { saveDailyRecord, getAllRecords, getSavingsGoals, markGoalAchieved } from "@/lib/data";
+import { saveDailyRecord, getAllRecords, getSavingsGoals, markGoalAchieved, getHabitRecords } from "@/lib/data";
 import { todayJST } from "@/lib/date";
 
 export async function signOut() {
@@ -43,6 +43,13 @@ export async function recordToday(status: "avoided") {
   revalidatePath("/");
 }
 
+export async function recordRest() {
+  const supabase = await createClient();
+  const userId = await requireUserId(supabase);
+  await saveDailyRecord(supabase, userId, todayJST(), "went");
+  revalidatePath("/");
+}
+
 export async function recordWent() {
   const supabase = await createClient();
   const userId = await requireUserId(supabase);
@@ -56,4 +63,25 @@ export async function updateTodayMemo(memo: string) {
   const userId = await requireUserId(supabase);
   await saveDailyRecord(supabase, userId, todayJST(), "resisted", memo);
   revalidatePath("/");
+}
+
+export async function toggleHabitToday(habitId: string) {
+  const supabase = await createClient();
+  const userId = await requireUserId(supabase);
+  const today = todayJST();
+  const { data: habit } = await supabase.from("habits").select("id, amount").eq("id", habitId).eq("user_id", userId).eq("is_active", true).maybeSingle();
+  if (!habit) return;
+
+  const { data: existing } = await supabase.from("habit_records").select("id").eq("habit_id", habitId).eq("user_id", userId).eq("date", today).maybeSingle();
+  if (existing) {
+    await supabase.from("habit_records").delete().eq("id", existing.id).eq("user_id", userId);
+  } else {
+    await supabase.from("habit_records").insert({ habit_id: habitId, user_id: userId, date: today, amount: habit.amount });
+  }
+
+  const [records, goals] = await Promise.all([getHabitRecords(supabase, userId), getSavingsGoals(supabase, userId).catch(() => [])]);
+  const totalSaved = records.reduce((sum, record) => sum + record.amount, 0);
+  await Promise.all(goals.filter((goal) => !goal.achieved_at && totalSaved >= goal.target_amount).map((goal) => markGoalAchieved(supabase, userId, goal.id)));
+  revalidatePath("/");
+  revalidatePath("/calendar");
 }

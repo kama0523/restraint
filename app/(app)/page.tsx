@@ -1,165 +1,67 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getAllRecords, getSettings, getSavingsGoals } from "@/lib/data";
-import { getConfiguredDailyAmount } from "@/lib/savings";
+import { getHabitRecords, getHabits, getSavingsGoals } from "@/lib/data";
 import { currentStreak } from "@/lib/streak";
-import { currentMonthJST, formatJapaneseDate, todayJST } from "@/lib/date";
-import { calcProjection, calcSuccessRate } from "@/lib/projection";
+import { formatJapaneseDate, todayJST } from "@/lib/date";
+import type { DailyRecord } from "@/lib/types";
 import { TodayChoice } from "./_components/today-choice";
-import { SavingsChart } from "./_components/savings-chart";
 import { GoalSection } from "./_components/goal-section";
-import { signOut } from "./actions";
+import { SavingsChart } from "./_components/savings-chart";
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [settings, records, goals] = await Promise.all([
-    getSettings(supabase, user.id),
-    getAllRecords(supabase, user.id),
+  const [habits, habitRecords, goals] = await Promise.all([
+    getHabits(supabase, user.id).catch(() => []),
+    getHabitRecords(supabase, user.id).catch(() => []),
     getSavingsGoals(supabase, user.id).catch(() => []),
   ]);
+  if (habits.length === 0) redirect("/settings?onboarding=1");
 
   const today = todayJST();
-  const month = currentMonthJST();
-  const todayRecord = records.find((r) => r.date === today) ?? null;
-
-  const totalSaved = records.reduce((sum, r) => sum + r.daily_amount, 0);
-
-  const newlyAchievedIds: string[] = [];
-  const updatedGoals = goals.map((g) => {
-    if (!g.achieved_at && totalSaved >= g.target_amount) {
-      newlyAchievedIds.push(g.id);
-      return { ...g, achieved_at: new Date().toISOString() };
-    }
-    return g;
-  });
-
-  const streak = currentStreak(records, today);
-  const monthRecords = records.filter((r) => r.date.startsWith(month));
-  const monthSuccessCount = monthRecords.filter((r) => r.status !== "went").length;
-  const monthSlipCount = monthRecords.filter((r) => r.status === "went").length;
-  const dailyAmount = getConfiguredDailyAmount(settings);
-
-  const successRate = calcSuccessRate(records);
-  const projection = calcProjection(dailyAmount, successRate);
-
-  const pledge = settings.pledge ?? null;
-  const addictionLabel = settings.addiction_label ?? null;
-  const appTitle = addictionLabel ? `${addictionLabel}の抑制積立` : "抑制積立";
+  const todayRecords = habitRecords.filter((record) => record.date === today);
+  const totalSaved = habitRecords.reduce((sum, record) => sum + record.amount, 0);
+  const todaySaved = todayRecords.reduce((sum, record) => sum + record.amount, 0);
+  const amountsByDate = new Map<string, number>();
+  habitRecords.forEach((record) => amountsByDate.set(record.date, (amountsByDate.get(record.date) ?? 0) + record.amount));
+  const chartRecords: DailyRecord[] = [...amountsByDate].sort(([a], [b]) => a.localeCompare(b)).map(([date, amount]) => ({ id: date, user_id: user.id, date, status: "avoided", daily_amount: amount, memo: null, created_at: date, updated_at: date }));
+  const streak = currentStreak(chartRecords, today);
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-6">
-      <header className="mb-6 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-stone-800">{appTitle}</h1>
-        <form action={signOut}>
-          <button className="text-xs text-stone-400 underline">ログアウト</button>
-        </form>
+    <main className="mx-auto w-full max-w-md px-5 pb-8 pt-8">
+      <header className="mb-8">
+        <p className="text-sm font-medium text-emerald-700">つづく貯金</p>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight text-stone-900">がんばった分だけ、貯まっていく。</h1>
+        <p className="mt-2 text-sm leading-6 text-stone-500">習慣とお金を、一緒に積み立てよう。</p>
       </header>
 
-      <section className="mb-6 grid grid-cols-2 gap-3">
-        <StatCard label="現在の積立額" value={`¥${totalSaved.toLocaleString()}`} accent />
-        <StatCard label="連続成功日数" value={`${streak}日`} />
-        <StatCard label="今月の成功日数" value={`${monthSuccessCount}日`} />
-        <StatCard label="今月のスリップ" value={`${monthSlipCount}回`} />
+      <section className="mb-5 overflow-hidden rounded-3xl bg-emerald-600 p-6 text-white shadow-sm">
+        <p className="text-sm text-emerald-100">これまでに貯まった金額</p>
+        <p className="mt-2 text-4xl font-bold tracking-tight">¥{totalSaved.toLocaleString()}</p>
+        <div className="mt-5 flex items-center justify-between border-t border-white/20 pt-4 text-sm text-emerald-50">
+          <span>{streak}日継続中</span><span>今日は +¥{todaySaved.toLocaleString()}</span>
+        </div>
       </section>
 
-      <section className="mb-6">
-        <SavingsChart records={records} goals={updatedGoals} />
+      <section className="mb-5 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-stone-100">
+        <div className="mb-4">
+          <p className="text-xs font-medium text-stone-400">{formatJapaneseDate(today)}</p>
+          <h2 className="mt-1 text-lg font-bold text-stone-800">今日できたこと</h2>
+          <p className="mt-1 text-xs text-stone-400">できた習慣をタップしてください。</p>
+        </div>
+        <TodayChoice habits={habits} records={todayRecords} />
+        <Link href="/settings" className="mt-4 block text-center text-xs font-medium text-emerald-700">＋ 習慣を追加する</Link>
       </section>
 
-      <section className="mb-6">
-        <GoalSection
-          goals={updatedGoals}
-          totalSaved={totalSaved}
-          newlyAchievedIds={newlyAchievedIds}
-        />
+      <section className="mb-5"><GoalSection goals={goals} totalSaved={totalSaved} newlyAchievedIds={[]} /></section>
+      <section className="mb-5">
+        <h2 className="mb-3 text-base font-bold text-stone-800">貯金の歩み</h2>
+        <SavingsChart records={chartRecords} goals={goals} />
       </section>
-
-      {/* 節約シミュレーター */}
-      {records.length > 0 && (
-        <section className="mb-6">
-          <h2 className="mb-2 text-sm font-semibold text-stone-600">
-            このペースで続けると…
-            {records.length >= 7 && (
-              <span className="ml-2 text-xs font-normal text-stone-400">
-                (成功率{Math.round(successRate * 100)}%ベース)
-              </span>
-            )}
-          </h2>
-          <div className="grid grid-cols-3 gap-2">
-            <ProjectionCard label="30日後" value={projection.days30} />
-            <ProjectionCard label="90日後" value={projection.days90} />
-            <ProjectionCard label="1年後" value={projection.days365} />
-          </div>
-        </section>
-      )}
-
-      {/* 自己誓約書 */}
-      {pledge && (
-        <section className="mb-6">
-          <div className="rounded-xl border-l-4 border-emerald-500 bg-white p-4 shadow-sm">
-            <p className="mb-1 text-xs font-semibold text-emerald-600">あなたの誓い</p>
-            <p className="whitespace-pre-wrap text-sm text-stone-700 leading-relaxed">{pledge}</p>
-          </div>
-        </section>
-      )}
-
-      {/* 衝動ブレーキ */}
-      <section className="mb-6">
-        <Link
-          href="/urge"
-          className="flex w-full items-center justify-between rounded-xl bg-sky-600 px-5 py-4 text-white shadow-sm active:bg-sky-700"
-        >
-          <div>
-            <p className="text-base font-bold">衝動ブレーキ</p>
-            <p className="text-xs text-sky-100 mt-0.5">やりたくなったらここをタップ</p>
-          </div>
-          <span className="text-2xl">🛑</span>
-        </Link>
-      </section>
-
-      <section>
-        <h2 className="mb-2 text-sm font-semibold text-stone-600">
-          今日の記録({formatJapaneseDate(today)})
-        </h2>
-        <TodayChoice record={todayRecord} dailyAmount={dailyAmount} />
-      </section>
+      <Link href="/calendar" className="flex items-center justify-between rounded-2xl px-1 py-3 text-sm font-medium text-stone-600"><span>これまでの記録を見る</span><span aria-hidden="true" className="text-stone-400">→</span></Link>
     </main>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      className={`rounded-xl p-4 shadow-sm ${
-        accent ? "bg-emerald-600 text-white" : "bg-white text-stone-800"
-      }`}
-    >
-      <p className={`text-xs ${accent ? "text-emerald-100" : "text-stone-400"}`}>{label}</p>
-      <p className="mt-1 text-xl font-bold">{value}</p>
-    </div>
-  );
-}
-
-function ProjectionCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-xl bg-white p-3 shadow-sm text-center">
-      <p className="text-xs text-stone-400">{label}</p>
-      <p className="mt-1 text-base font-bold text-stone-800">
-        ¥{value >= 10000 ? `${Math.floor(value / 10000)}万` : value.toLocaleString()}
-      </p>
-    </div>
   );
 }

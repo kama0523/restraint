@@ -11,10 +11,10 @@ export default async function LoginPage({
     <main className="flex min-h-screen flex-col items-center justify-center bg-stone-50 px-6">
       <div className="w-full max-w-sm">
         <h1 className="mb-1 text-center text-2xl font-bold text-stone-800">
-          抑制積立
+          つづく貯金
         </h1>
         <p className="mb-8 text-center text-sm text-stone-500">
-          今日も、やめられた自分を積み立てよう
+          続けた分だけ、未来の楽しみが貯まっていく
         </p>
 
         <form action={signIn} className="flex flex-col gap-4">

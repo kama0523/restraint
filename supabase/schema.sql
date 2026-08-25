@@ -6,9 +6,9 @@
 -- 積立設定(ユーザーごと1行)
 create table if not exists settings (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  weekly_amount integer not null default 3000,
-  daily_amount integer,
-  savings_basis text not null default 'weekly' check (savings_basis in ('weekly', 'daily')),
+  weekly_amount integer not null default 3500,
+  daily_amount integer default 500,
+  savings_basis text not null default 'daily' check (savings_basis in ('weekly', 'daily')),
   updated_at timestamptz not null default now()
 );
 
@@ -81,3 +81,36 @@ create policy "savings_goals_select_own" on savings_goals for select using (auth
 create policy "savings_goals_insert_own" on savings_goals for insert with check (auth.uid() = user_id);
 create policy "savings_goals_update_own" on savings_goals for update using (auth.uid() = user_id);
 create policy "savings_goals_delete_own" on savings_goals for delete using (auth.uid() = user_id);
+
+-- 続けたい習慣（複数登録可）
+create table if not exists habits (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null check (char_length(name) between 1 and 50),
+  amount integer not null default 500 check (amount >= 0),
+  color text not null default 'emerald',
+  is_active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists habit_records (
+  id uuid primary key default gen_random_uuid(),
+  habit_id uuid not null references habits(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  date date not null,
+  amount integer not null check (amount >= 0),
+  created_at timestamptz not null default now(),
+  unique (habit_id, date)
+);
+
+create index if not exists habits_user_idx on habits (user_id, created_at);
+create index if not exists habit_records_user_date_idx on habit_records (user_id, date desc);
+alter table habits enable row level security;
+alter table habit_records enable row level security;
+create policy "habits_select_own" on habits for select using (auth.uid() = user_id);
+create policy "habits_insert_own" on habits for insert with check (auth.uid() = user_id);
+create policy "habits_update_own" on habits for update using (auth.uid() = user_id);
+create policy "habits_delete_own" on habits for delete using (auth.uid() = user_id);
+create policy "habit_records_select_own" on habit_records for select using (auth.uid() = user_id);
+create policy "habit_records_insert_own" on habit_records for insert with check (auth.uid() = user_id);
+create policy "habit_records_delete_own" on habit_records for delete using (auth.uid() = user_id);

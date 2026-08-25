@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getAllRecords, getSavingsGoals } from "@/lib/data";
+import { getHabitRecords, getSavingsGoals } from "@/lib/data";
+import type { DailyRecord } from "@/lib/types";
 import { DetailChart } from "./_components/detail-chart";
 
 export default async function ChartPage() {
@@ -10,12 +11,17 @@ export default async function ChartPage() {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [records, goals] = await Promise.all([
-    getAllRecords(supabase, user.id),
+  const [habitRecords, goals] = await Promise.all([
+    getHabitRecords(supabase, user.id),
     getSavingsGoals(supabase, user.id).catch(() => []),
   ]);
 
-  const totalSaved = records.reduce((sum, r) => sum + r.daily_amount, 0);
+  const totalSaved = habitRecords.reduce((sum, record) => sum + record.amount, 0);
+  const amountsByDate = new Map<string, number>();
+  habitRecords.forEach((record) => amountsByDate.set(record.date, (amountsByDate.get(record.date) ?? 0) + record.amount));
+  const records: DailyRecord[] = [...amountsByDate].sort(([a], [b]) => a.localeCompare(b)).map(([date, amount]) => ({
+    id: date, user_id: user.id, date, status: "avoided", daily_amount: amount, memo: null, created_at: date, updated_at: date,
+  }));
   const sortedGoals = [...goals].sort((a, b) => a.target_amount - b.target_amount);
 
   return (
@@ -24,7 +30,7 @@ export default async function ChartPage() {
         <Link href="/" className="text-sm text-stone-400">
           ← 戻る
         </Link>
-        <h1 className="text-lg font-bold text-stone-800">積立推移</h1>
+        <h1 className="text-lg font-bold text-stone-800">貯金の歩み</h1>
       </header>
 
       {records.length === 0 ? (

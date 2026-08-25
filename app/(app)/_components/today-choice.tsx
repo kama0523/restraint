@@ -1,91 +1,27 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import Link from "next/link";
-import { recordToday, updateTodayMemo } from "../actions";
-import type { DailyRecord } from "@/lib/types";
-import { STATUS_BADGE_CLASS, STATUS_LABEL } from "@/lib/status";
+import { useTransition } from "react";
+import type { Habit, HabitRecordWithHabit } from "@/lib/types";
+import { toggleHabitToday } from "../actions";
 
-export function TodayChoice({
-  record,
-  dailyAmount,
-}: {
-  record: DailyRecord | null;
-  dailyAmount: number;
-}) {
+export function TodayChoice({ habits, records }: { habits: Habit[]; records: HabitRecordWithHabit[] }) {
   const [pending, startTransition] = useTransition();
-  const [memo, setMemo] = useState(record?.memo ?? "");
-  const [memoDirty, setMemoDirty] = useState(false);
-
-  if (!record) {
-    return (
-      <div className="flex flex-col gap-3">
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => startTransition(() => recordToday("avoided"))}
-          className="rounded-xl bg-emerald-600 py-4 text-base font-semibold text-white shadow-sm active:bg-emerald-700 disabled:opacity-50"
-        >
-          ○ 今日は踏みとどまった
-          <span className="ml-2 text-sm font-normal text-emerald-100">+¥{dailyAmount}</span>
-        </button>
-        <Link
-          href="/slip-confirm"
-          className="block rounded-xl border border-stone-300 py-4 text-center text-base font-semibold text-stone-500 active:bg-stone-100"
-        >
-          × やってしまいそう
-        </Link>
-      </div>
-    );
-  }
+  const completedIds = new Set(records.map((record) => record.habit_id));
 
   return (
-    <div className="rounded-xl bg-white p-4 shadow-sm">
-      <span
-        className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${STATUS_BADGE_CLASS[record.status]}`}
-      >
-        {STATUS_LABEL[record.status]}
-      </span>
-
-      {record.status === "resisted" && (
-        <div className="mt-3">
-          <label className="mb-1 block text-xs text-stone-400">メモ(任意)</label>
-          <textarea
-            value={memo}
-            onChange={(e) => {
-              setMemo(e.target.value);
-              setMemoDirty(true);
-            }}
-            rows={2}
-            placeholder="何があった？どう乗り越えた？"
-            className="w-full rounded-lg border border-stone-200 p-2 text-sm focus:border-sky-400 focus:outline-none"
-          />
-          {memoDirty && (
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() =>
-                startTransition(async () => {
-                  await updateTodayMemo(memo);
-                  setMemoDirty(false);
-                })
-              }
-              className="mt-2 rounded-lg bg-sky-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
-            >
-              メモを保存
+    <ul className="space-y-2.5">
+      {habits.map((habit) => {
+        const completed = completedIds.has(habit.id);
+        return (
+          <li key={habit.id}>
+            <button type="button" disabled={pending} onClick={() => startTransition(() => toggleHabitToday(habit.id))} className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-4 text-left transition disabled:opacity-60 ${completed ? "border-emerald-200 bg-emerald-50" : "border-stone-200 bg-white active:bg-stone-50"}`}>
+              <span className={`flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold ${completed ? "border-emerald-600 bg-emerald-600 text-white" : "border-stone-300 text-transparent"}`}>✓</span>
+              <span className="min-w-0 flex-1 font-semibold text-stone-800">{habit.name}</span>
+              <span className={`text-sm font-semibold ${completed ? "text-emerald-700" : "text-stone-400"}`}>+¥{habit.amount.toLocaleString()}</span>
             </button>
-          )}
-        </div>
-      )}
-
-      {record.status === "went" && (
-        <Link
-          href={`/regret/new?recordId=${record.id}`}
-          className="mt-3 block text-sm font-medium text-emerald-700 underline"
-        >
-          後悔メモを見る・編集する →
-        </Link>
-      )}
-    </div>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

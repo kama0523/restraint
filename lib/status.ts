@@ -1,9 +1,9 @@
 import type { DailyStatus } from "./types";
 
 export const STATUS_LABEL: Record<DailyStatus, string> = {
-  avoided: "○ 踏みとどまった",
-  resisted: "◎ 衝動を乗り越えた",
-  went: "× やってしまった",
+  avoided: "続けられた",
+  resisted: "続けられた",
+  went: "お休み",
 };
 
 export const STATUS_BADGE_CLASS: Record<DailyStatus, string> = {
@@ -13,9 +13,9 @@ export const STATUS_BADGE_CLASS: Record<DailyStatus, string> = {
 };
 
 export const STATUS_SYMBOL: Record<DailyStatus, string> = {
-  avoided: "○",
-  resisted: "◎",
-  went: "×",
+  avoided: "●",
+  resisted: "●",
+  went: "–",
 };
 
 export const STATUS_SYMBOL_CLASS: Record<DailyStatus, string> = {

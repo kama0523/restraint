@@ -1,7 +1,7 @@
 {
-  "name": "抑制積立",
-  "short_name": "抑制積立",
-  "description": "やめたい習慣を我慢した日を積み立てる、自分専用の抑制習慣アプリ",
+  "name": "つづく貯金",
+  "short_name": "つづく貯金",
+  "description": "続けられた日を記録して、少しずつお金を貯める習慣アプリ",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

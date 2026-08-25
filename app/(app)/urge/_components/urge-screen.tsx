@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect } from "react";
 import { recordOvercameUrge, recordGaveIn } from "../actions";
 import type { SavingsGoal, RegretNoteWithDate } from "@/lib/types";
 
@@ -33,19 +33,14 @@ export function UrgeScreen({
 }) {
   const totalSeconds = timerMinutes * 60;
   const [remaining, setRemaining] = useState(totalSeconds);
-  const [timerDone, setTimerDone] = useState(false);
-  const [pending, startTransition] = useTransition();
+  const timerDone = remaining <= 0;
 
   useEffect(() => {
-    if (remaining <= 0) {
-      setTimerDone(true);
-      return;
-    }
+    if (remaining <= 0) return;
     const id = setInterval(() => {
       setRemaining((prev) => {
         if (prev <= 1) {
           clearInterval(id);
-          setTimerDone(true);
           return 0;
         }
         return prev - 1;
@@ -195,7 +190,6 @@ export function UrgeScreen({
         <form action={recordOvercameUrge}>
           <button
             type="submit"
-            disabled={pending}
             className="w-full rounded-2xl bg-emerald-600 py-5 text-lg font-bold text-white shadow-lg active:bg-emerald-700 disabled:opacity-50"
           >
             乗り越えた！
@@ -204,7 +198,6 @@ export function UrgeScreen({
         <form action={recordGaveIn}>
           <button
             type="submit"
-            disabled={pending}
             className="w-full rounded-lg py-3 text-sm text-stone-400 active:text-stone-600 disabled:opacity-50"
           >
             やはりやってしまった

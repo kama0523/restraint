@@ -44,6 +44,8 @@ export async function updateSettings(formData: FormData) {
 
 export async function updateExtendedSettings(formData: FormData) {
   const addictionLabel = (formData.get("addiction_label") as string)?.trim() || null;
+  const isOnboarding = formData.get("onboarding") === "1";
+  if (!addictionLabel) redirect("/settings?onboarding=1");
   const pledge = (formData.get("pledge") as string)?.trim() || null;
   const alternativeActions = (formData.get("alternative_actions") as string)?.trim() || null;
   const timerRaw = Number(formData.get("urge_timer_minutes"));
@@ -66,7 +68,7 @@ export async function updateExtendedSettings(formData: FormData) {
   revalidatePath("/settings");
   revalidatePath("/");
   revalidatePath("/urge");
-  redirect("/settings?saved=1");
+  redirect(isOnboarding ? "/" : "/settings?saved=1");
 }
 
 export async function addGoal(formData: FormData): Promise<void> {
@@ -112,4 +114,35 @@ export async function deleteGoal(goalId: string): Promise<void> {
 
   revalidatePath("/settings");
   revalidatePath("/");
+}
+
+export async function addHabit(formData: FormData): Promise<void> {
+  const name = String(formData.get("name") ?? "").trim();
+  const amount = Number(formData.get("amount"));
+  const isOnboarding = formData.get("onboarding") === "1";
+  if (!name || name.length > 50 || !Number.isFinite(amount) || amount < 0) {
+    redirect(`/settings?${isOnboarding ? "onboarding=1&" : ""}habit_error=1`);
+  }
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { error } = await supabase.from("habits").insert({
+    user_id: user.id,
+    name,
+    amount: Math.round(amount),
+  });
+  if (error) redirect(`/settings?${isOnboarding ? "onboarding=1&" : ""}habit_error=db`);
+  revalidatePath("/");
+  revalidatePath("/settings");
+  redirect(isOnboarding ? "/" : "/settings?habit_saved=1");
+}
+
+export async function deleteHabit(habitId: string): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  await supabase.from("habits").update({ is_active: false }).eq("id", habitId).eq("user_id", user.id);
+  revalidatePath("/");
+  revalidatePath("/settings");
 }

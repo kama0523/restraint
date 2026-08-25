@@ -38,7 +38,7 @@ export function GoalSection({
   if (goals.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-stone-300 p-4 text-center">
-        <p className="text-sm text-stone-500">目標積立額を設定してみましょう</p>
+        <p className="text-sm text-stone-500">貯金の目標を決めてみましょう</p>
         <Link
           href="/settings"
           className="mt-1.5 inline-block text-sm font-medium text-emerald-600 underline"

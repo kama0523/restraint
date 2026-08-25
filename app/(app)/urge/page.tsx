@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getSettings, getAllRecords, getSavingsGoals, getAllRegretNotes } from "@/lib/data";
 import { currentStreak } from "@/lib/streak";
@@ -38,9 +39,9 @@ export default async function UrgePage() {
   return (
     <main className="mx-auto max-w-md px-4 pt-6">
       <header className="mb-6 flex items-center gap-3">
-        <a href="/" className="text-stone-400 text-sm underline">
+        <Link href="/" className="text-stone-400 text-sm underline">
           ← 戻る
-        </a>
+        </Link>
         <h1 className="text-lg font-bold text-stone-800">衝動ブレーキ</h1>
       </header>
 

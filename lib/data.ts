@@ -10,7 +10,38 @@ import type {
   SavingsBasis,
   SavingsGoal,
   Settings,
+  Habit,
+  HabitRecordWithHabit,
 } from "./types";
+
+export async function getHabits(supabase: SupabaseClient, userId: string): Promise<Habit[]> {
+  const { data, error } = await supabase
+    .from("habits")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as Habit[];
+}
+
+export async function getHabitRecords(
+  supabase: SupabaseClient,
+  userId: string,
+  start?: string,
+  end?: string,
+): Promise<HabitRecordWithHabit[]> {
+  let query = supabase
+    .from("habit_records")
+    .select("*, habits(name, color)")
+    .eq("user_id", userId)
+    .order("date", { ascending: true });
+  if (start) query = query.gte("date", start);
+  if (end) query = query.lt("date", end);
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as HabitRecordWithHabit[];
+}
 
 export async function getSettings(supabase: SupabaseClient, userId: string): Promise<Settings> {
   const { data } = await supabase
@@ -22,18 +53,25 @@ export async function getSettings(supabase: SupabaseClient, userId: string): Pro
   if (data) {
     const settings = data as Partial<Settings> & Pick<Settings, "user_id" | "weekly_amount" | "updated_at">;
 
+    // 旧初期値（週3,000円）のままなら、新しい初期値の1日500円へ移行する。
+    const hasLegacyDefault =
+      settings.weekly_amount === 3000 &&
+      settings.daily_amount == null &&
+      (settings.savings_basis == null || settings.savings_basis === "weekly");
+
     return {
       ...settings,
-      daily_amount: settings.daily_amount ?? null,
-      savings_basis: settings.savings_basis ?? "weekly",
+      weekly_amount: hasLegacyDefault ? 3500 : settings.weekly_amount,
+      daily_amount: hasLegacyDefault ? 500 : (settings.daily_amount ?? null),
+      savings_basis: hasLegacyDefault ? "daily" : (settings.savings_basis ?? "weekly"),
     };
   }
 
   return {
     user_id: userId,
-    weekly_amount: 3000,
-    daily_amount: null,
-    savings_basis: "weekly",
+    weekly_amount: 3500,
+    daily_amount: 500,
+    savings_basis: "daily",
     updated_at: new Date().toISOString(),
     addiction_label: null,
     pledge: null,

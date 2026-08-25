@@ -26,9 +26,9 @@ export function SettingsForm({
     savingsBasis === "daily" ? weeklyAmountFromDaily(dailyAmount) : weeklyAmount;
 
   return (
-    <form action={updateSettings} className="flex flex-col gap-4">
+    <form action={updateSettings} className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-100">
       <fieldset className="flex flex-col gap-2">
-        <legend className="text-sm font-medium text-stone-700">積立額の決め方</legend>
+        <legend className="text-sm font-medium text-stone-700">金額の決め方</legend>
         <div className="grid grid-cols-2 rounded-lg bg-stone-100 p-1">
           <label
             className={`rounded-md px-3 py-2 text-center text-sm font-semibold ${
@@ -67,7 +67,7 @@ export function SettingsForm({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="amount_input" className="text-sm font-medium text-stone-700">
-          {savingsBasis === "weekly" ? "週あたりの積立額" : "1日あたりの積立額"}
+          {savingsBasis === "weekly" ? "週あたりの金額" : "続けられた日の金額"}
         </label>
         <div className="flex items-center gap-2">
           <span className="text-stone-500">¥</span>
@@ -96,8 +96,7 @@ export function SettingsForm({
       </div>
 
       <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-        現在の設定では1日あたり{" "}
-        <span className="font-bold">¥{configuredDailyAmount.toLocaleString()}</span> の積立
+        続けられた日に <span className="font-bold">¥{configuredDailyAmount.toLocaleString()}</span> 貯まります
       </div>
 
       {saved && (

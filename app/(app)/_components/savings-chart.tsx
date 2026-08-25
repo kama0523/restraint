@@ -40,8 +40,8 @@ export function SavingsChart({
 
   if (records.length === 0) {
     return (
-      <div className="flex h-32 items-center justify-center rounded-xl bg-white text-sm text-stone-400 shadow-sm">
-        記録が増えるとグラフが表示されます
+      <div className="flex h-32 items-center justify-center rounded-2xl bg-white px-6 text-center text-sm text-stone-400 shadow-sm ring-1 ring-stone-100">
+        「続けられた」を記録すると、ここに貯金の歩みが表示されます
       </div>
     );
   }
@@ -101,12 +101,12 @@ export function SavingsChart({
   const tooltipBelow = active != null && active.y / HEIGHT < 0.35;
 
   return (
-    <div className="rounded-xl bg-white p-4 shadow-sm">
+    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-100">
       <div className="mb-2 flex items-baseline justify-between">
-        <p className="text-xs text-stone-400">積立額の推移</p>
+        <p className="text-xs text-stone-400">累計金額の推移</p>
         <div className="flex items-baseline gap-3">
           <p className="text-sm font-bold text-emerald-700">¥{cumulative.toLocaleString()}</p>
-          <Link href="/chart" className="text-xs text-stone-400 underline">詳細</Link>
+          <Link href="/chart" className="text-xs font-medium text-emerald-700">詳しく見る →</Link>
         </div>
       </div>
 
