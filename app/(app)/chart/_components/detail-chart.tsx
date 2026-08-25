@@ -1,4 +1,4 @@
-import type { DailyRecord, SavingsGoal } from "@/lib/types";
+import type { SavingsDay, SavingsGoal } from "@/lib/types";
 
 const WIDTH = 300;
 const HEIGHT = 180;
@@ -24,7 +24,7 @@ export function DetailChart({
   records,
   goals,
 }: {
-  records: DailyRecord[];
+  records: SavingsDay[];
   goals: SavingsGoal[];
 }) {
   const sorted = [...records].sort((a, b) => a.date.localeCompare(b.date));
@@ -32,9 +32,9 @@ export function DetailChart({
 
   const totals = sorted.reduce<number[]>((acc, r, i) => {
     const prev = i === 0 ? 0 : acc[i - 1];
-    return [...acc, prev + r.daily_amount];
+    return [...acc, prev + r.amount];
   }, []);
-  const points = sorted.map((r, i) => ({ status: r.status, total: totals[i] }));
+  const points = sorted.map((_, i) => ({ total: totals[i] }));
 
   const sortedGoals = [...goals].sort((a, b) => a.target_amount - b.target_amount);
 
@@ -131,11 +131,6 @@ export function DetailChart({
               strokeLinejoin="round"
               strokeLinecap="round"
             />
-            {coords.map((c, i) =>
-              c.status === "went" ? (
-                <circle key={i} cx={c.x} cy={c.y} r={3} fill="rgb(168 162 158)" />
-              ) : null,
-            )}
           </svg>
 
           {/* 目標ラベル */}

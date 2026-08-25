@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import Link from "next/link";
-import type { DailyRecord, SavingsGoal } from "@/lib/types";
+import type { SavingsDay, SavingsGoal } from "@/lib/types";
 
 const WIDTH = 300;
 const HEIGHT = 120;
@@ -32,7 +32,7 @@ export function SavingsChart({
   records,
   goals = [],
 }: {
-  records: DailyRecord[];
+  records: SavingsDay[];
   goals?: SavingsGoal[];
 }) {
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
@@ -51,7 +51,7 @@ export function SavingsChart({
 
   const totals = sorted.reduce<number[]>((acc, r, i) => {
     const prev = i === 0 ? 0 : acc[i - 1];
-    return [...acc, prev + r.daily_amount];
+    return [...acc, prev + r.amount];
   }, []);
   const cumulative = totals[n - 1];
 
@@ -66,7 +66,6 @@ export function SavingsChart({
 
   const coords = sorted.map((r, i) => ({
     date: r.date,
-    status: r.status,
     total: totals[i],
     x: n === 1 ? WIDTH / 2 : PAD + (i / (n - 1)) * (WIDTH - PAD * 2),
     y: toY(totals[i], max),
@@ -155,12 +154,6 @@ export function SavingsChart({
               strokeLinejoin="round"
               strokeLinecap="round"
             />
-            {coords.map((c, i) =>
-              c.status === "went" ? (
-                <circle key={i} cx={c.x} cy={c.y} r={2.5} fill="rgb(168 162 158)" />
-              ) : null,
-            )}
-
             {/* アクティブ時の縦線 + ドット */}
             {active && (
               <>

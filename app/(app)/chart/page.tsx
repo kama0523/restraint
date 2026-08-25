@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getHabitRecords, getSavingsGoals } from "@/lib/data";
-import type { DailyRecord } from "@/lib/types";
+import type { SavingsDay } from "@/lib/types";
 import { DetailChart } from "./_components/detail-chart";
 
 export default async function ChartPage() {
@@ -19,9 +19,7 @@ export default async function ChartPage() {
   const totalSaved = habitRecords.reduce((sum, record) => sum + record.amount, 0);
   const amountsByDate = new Map<string, number>();
   habitRecords.forEach((record) => amountsByDate.set(record.date, (amountsByDate.get(record.date) ?? 0) + record.amount));
-  const records: DailyRecord[] = [...amountsByDate].sort(([a], [b]) => a.localeCompare(b)).map(([date, amount]) => ({
-    id: date, user_id: user.id, date, status: "avoided", daily_amount: amount, memo: null, created_at: date, updated_at: date,
-  }));
+  const records: SavingsDay[] = [...amountsByDate].sort(([a], [b]) => a.localeCompare(b)).map(([date, amount]) => ({ date, amount }));
   const sortedGoals = [...goals].sort((a, b) => a.target_amount - b.target_amount);
 
   return (
